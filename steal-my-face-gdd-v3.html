@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STEAL MY FACE — Game Design Document v3</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+:root{
+  --void:#06060e;
+  --panel:#0e0e1c;
+  --panel2:#131326;
+  --ink:#eceaf4;
+  --muted:#8c8aa6;
+  --line:rgba(255,255,255,.07);
+  --fire:#ff4f0a;
+  --ember:#ff8b00;
+  --volt:#3d88ff;
+  --psy:#a855f7;
+  --gold:#ffb800;
+  --mint:#00ffb2;
+  --div:#ff44ff;
+  --common:#9a9aa8;
+  --ok:#3ddc6a;
+  --warn:#ffb800;
+  --bug:#ff4d5e;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--void);
+  color:var(--ink);
+  font-family:'Space Grotesk',sans-serif;
+  font-size:16px;
+  line-height:1.65;
+  overflow-x:hidden;
+}
+::selection{background:var(--fire);color:#fff}
+
+/* ====== fond atmosphérique ====== */
+body::before{
+  content:'';position:fixed;inset:0;z-index:-2;
+  background:
+    radial-gradient(ellipse 70% 45% at 15% 0%,rgba(255,79,10,.09),transparent 60%),
+    radial-gradient(ellipse 55% 40% at 88% 12%,rgba(168,85,247,.08),transparent 60%),
+    radial-gradient(ellipse 80% 55% at 50% 105%,rgba(61,136,255,.07),transparent 60%);
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);
+  background-size:48px 48px;
+}
+
+/* ====== barre de progression ====== */
+#progress{
+  position:fixed;top:0;left:0;height:3px;width:0%;z-index:100;
+  background:linear-gradient(90deg,var(--fire),var(--ember),var(--gold));
+  box-shadow:0 0 12px rgba(255,79,10,.8);
+}
+
+.wrap{max-width:1060px;margin:0 auto;padding:0 24px}
+
+/* ====== HERO ====== */
+header.hero{
+  min-height:100svh;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  text-align:center;padding:90px 20px 70px;
+}
+.sky{position:absolute;inset:0;pointer-events:none}
+.meteor{
+  position:absolute;top:-12%;
+  width:3px;height:130px;border-radius:3px;
+  background:linear-gradient(180deg,transparent,var(--c,#ff8b00) 55%,#fff);
+  filter:drop-shadow(0 0 8px var(--c,#ff8b00));
+  transform:rotate(33deg);
+  animation:fall var(--d,5s) linear infinite;
+  animation-delay:var(--del,0s);
+  opacity:0;
+}
+@keyframes fall{
+  0%{transform:translate(0,0) rotate(33deg);opacity:0}
+  6%{opacity:1}
+  78%{opacity:1}
+  100%{transform:translate(-60vh,110vh) rotate(33deg);opacity:0}
+}
+.impact-glow{
+  position:absolute;bottom:-14%;left:50%;transform:translateX(-50%);
+  width:130vw;height:38vh;border-radius:50%;
+  background:radial-gradient(ellipse at center,rgba(255,79,10,.22),rgba(255,79,10,.05) 45%,transparent 70%);
+  animation:breathe 6s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes breathe{0%,100%{opacity:.7}50%{opacity:1}}
+
+.hero .eyebrow{
+  font-family:'JetBrains Mono',monospace;font-size:.72rem;letter-spacing:.45em;
+  text-transform:uppercase;color:var(--ember);
+  border:1px solid rgba(255,139,0,.35);border-radius:100px;
+  padding:9px 20px;background:rgba(255,79,10,.06);margin-bottom:34px;
+  position:relative;z-index:2;
+}
+h1.title{
+  font-family:'Unbounded',sans-serif;font-weight:900;
+  font-size:clamp(2.4rem,9vw,6.8rem);line-height:.98;letter-spacing:-.01em;
+  position:relative;z-index:2;
+  background:linear-gradient(180deg,#ffffff 8%,#ffd9a0 38%,var(--ember) 62%,var(--fire) 100%);
+  background-size:100% 200%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:shimmer 7s ease-in-out infinite;
+}
+@keyframes shimmer{0%,100%{background-position:50% 0%}50%{background-position:50% 38%}}
+.hero .tagline{
+  margin-top:26px;max-width:640px;font-size:clamp(1.05rem,2.4vw,1.4rem);
+  font-weight:300;color:var(--muted);position:relative;z-index:2;
+}
+.hero .tagline strong{color:var(--ink);font-weight:600}
+
+.stats{
+  display:flex;gap:14px;flex-wrap:wrap;justify-content:center;
+  margin-top:52px;position:relative;z-index:2;
+}
+.stat{
+  background:rgba(14,14,28,.7);border:1px solid var(--line);border-radius:16px;
+  padding:18px 26px;min-width:128px;backdrop-filter:blur(6px);
+}
+.stat b{
+  display:block;font-family:'Unbounded',sans-serif;font-weight:800;
+  font-size:1.9rem;color:#fff;line-height:1.1;
+}
+.stat span{font-family:'JetBrains Mono',monospace;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.scroll-cue{
+  position:absolute;bottom:26px;left:50%;transform:translateX(-50%);
+  font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.3em;color:var(--muted);
+  animation:bob 2.4s ease-in-out infinite;z-index:2;
+}
+@keyframes bob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,8px)}}
+
+/* ====== SOMMAIRE ====== */
+nav.toc{
+  background:var(--panel);border:1px solid var(--line);border-radius:20px;
+  padding:30px 32px;margin:-50px auto 80px;position:relative;z-index:3;
+}
+nav.toc h2{
+  font-family:'Unbounded',sans-serif;font-weight:800;font-size:1.15rem;
+  letter-spacing:.04em;margin-bottom:18px;color:var(--ember);
+}
+.toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.toc-grid a{
+  display:flex;align-items:baseline;gap:10px;
+  color:var(--ink);text-decoration:none;font-size:.92rem;
+  padding:9px 12px;border-radius:10px;border:1px solid transparent;
+  transition:all .2s;
+}
+.toc-grid a:hover,.toc-grid a:focus-visible{background:rgba(255,79,10,.07);border-color:rgba(255,79,10,.25);color:var(--ember)}
+.toc-grid a::before{
+  content:attr(data-n);
+  font-family:'JetBrains Mono',monospace;font-size:.68rem;font-weight:700;color:var(--fire);
+}
+
+/* ====== CHAPITRES ====== */
+section{margin-bottom:110px;scroll-margin-top:40px}
+.ch-head{margin-bottom:34px}
+.ch-eyebrow{
+  font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.32em;
+  text-transform:uppercase;color:var(--c,var(--fire));margin-bottom:12px;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.ch-eyebrow::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--c,var(--fire)),transparent);min-width:40px}
+.ch-head h2{
+  font-family:'Unbounded',sans-serif;font-weight:800;
+  font-size:clamp(1.5rem,4.2vw,2.5rem);line-height:1.1;letter-spacing:-.01em;
+}
+section p{color:#c6c4d6;margin-bottom:16px;max-width:820px}
+section strong{color:var(--ink)}
+h3{font-size:1.18rem;font-weight:700;margin:30px 0 12px;color:var(--ember)}
+
+/* badges */
+.badge{
+  display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.62rem;font-weight:700;
+  padding:4px 11px;border-radius:7px;text-transform:uppercase;letter-spacing:.07em;
+  vertical-align:middle;margin-left:8px;
+}
+.b-ok{background:rgba(61,220,106,.12);color:var(--ok);border:1px solid rgba(61,220,106,.35)}
+.b-wip{background:rgba(255,184,0,.12);color:var(--warn);border:1px solid rgba(255,184,0,.35)}
+.b-todo{background:rgba(140,138,166,.12);color:var(--muted);border:1px solid rgba(140,138,166,.3)}
+.b-bug{background:rgba(255,77,94,.12);color:var(--bug);border:1px solid rgba(255,77,94,.35)}
+
+/* cartes & callouts */
+.callout{
+  background:linear-gradient(135deg,rgba(255,79,10,.08),rgba(168,85,247,.05));
+  border:1px solid rgba(255,79,10,.22);border-radius:16px;
+  padding:20px 24px;margin:22px 0;font-size:.95rem;max-width:820px;
+}
+.callout .ct{
+  font-family:'JetBrains Mono',monospace;font-size:.64rem;letter-spacing:.2em;
+  color:var(--fire);text-transform:uppercase;margin-bottom:8px;
+}
+
+/* tables */
+table{
+  width:100%;border-collapse:collapse;margin:18px 0 8px;font-size:.9rem;
+  background:var(--panel);border-radius:14px;overflow:hidden;
+}
+th{
+  background:var(--panel2);color:var(--ember);text-align:left;
+  padding:12px 15px;font-weight:600;font-size:.72rem;
+  text-transform:uppercase;letter-spacing:.08em;
+  font-family:'JetBrains Mono',monospace;
+}
+td{padding:11px 15px;border-top:1px solid var(--line);color:#c6c4d6;vertical-align:top}
+tr:hover td{background:rgba(255,255,255,.02)}
+.table-scroll{overflow-x:auto;border-radius:14px}
+
+/* ====== boucle de gameplay : timeline ====== */
+.loop{position:relative;margin-top:36px;padding-left:34px;max-width:760px}
+.loop::before{
+  content:'';position:absolute;left:11px;top:8px;bottom:8px;width:2px;
+  background:linear-gradient(180deg,var(--fire),var(--psy),var(--volt));
+  opacity:.45;
+}
+.loop-step{position:relative;padding:0 0 26px 22px}
+.loop-step::before{
+  content:'';position:absolute;left:-30px;top:5px;width:14px;height:14px;border-radius:50%;
+  background:var(--void);border:3px solid var(--fire);
+  box-shadow:0 0 12px rgba(255,79,10,.6);
+}
+.loop-step b{color:var(--ink)}
+.loop-step span{color:var(--muted);font-size:.95rem}
+
+/* ====== raretés ====== */
+.tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:12px;margin-top:28px}
+.tier{
+  --tc:#fff;
+  background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  padding:18px 16px;text-align:center;position:relative;overflow:hidden;
+  transition:transform .25s,box-shadow .25s,border-color .25s;
+}
+.tier::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--tc);box-shadow:0 0 14px var(--tc);
+}
+.tier:hover{transform:translateY(-5px);border-color:var(--tc);box-shadow:0 14px 34px -14px var(--tc)}
+.tier h4{font-family:'Unbounded',sans-serif;font-weight:700;font-size:.78rem;color:var(--tc);letter-spacing:.04em;margin-bottom:10px}
+.tier .row{display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted);padding:3px 0;border-top:1px dashed rgba(255,255,255,.07)}
+.tier .row b{color:var(--ink);font-family:'JetBrains Mono',monospace;font-weight:600}
+
+/* ====== masques ====== */
+.mask-tier{margin-bottom:26px}
+.mask-tier-title{
+  font-family:'Unbounded',sans-serif;font-weight:700;font-size:.92rem;letter-spacing:.06em;
+  margin-bottom:12px;padding-left:12px;border-left:4px solid var(--tc,#fff);color:var(--tc,#fff);
+}
+.mask-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px}
+.chip{
+  background:var(--panel);border:1px solid var(--line);border-radius:11px;
+  padding:11px 14px;font-size:.88rem;transition:border-color .2s,transform .2s;
+}
+.chip:hover{border-color:var(--tc,rgba(255,255,255,.25));transform:translateY(-2px)}
+.chip .mn{font-weight:600;color:var(--ink);display:block}
+.chip .mp{font-size:.74rem;color:var(--muted)}
+
+/* ====== jauge de vol — pièce signature ====== */
+.gauge-demo{
+  background:var(--panel);border:1px solid var(--line);border-radius:20px;
+  padding:34px 30px;margin:30px 0;max-width:640px;
+  box-shadow:0 0 60px -25px rgba(255,79,10,.4);
+}
+.gauge-title{
+  font-family:'Unbounded',sans-serif;font-weight:800;font-size:.95rem;letter-spacing:.06em;
+  text-align:center;margin-bottom:18px;transition:color .3s;
+}
+.gauge{display:flex;gap:7px;height:34px}
+.seg{
+  flex:1;border-radius:7px;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);
+  transition:background .3s,box-shadow .3s;
+}
+.seg.full{
+  background:var(--segc,var(--ember));
+  box-shadow:0 0 14px var(--segc,var(--ember));
+  border-color:transparent;
+}
+.gauge-sub{
+  display:flex;justify-content:space-between;margin-top:14px;
+  font-family:'JetBrains Mono',monospace;font-size:.66rem;letter-spacing:.14em;color:var(--muted);
+}
+
+/* ====== évolution ====== */
+.evo{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-top:30px}
+.evo-card{
+  --ec:#888;
+  background:var(--panel);border:1px solid var(--line);border-radius:18px;
+  padding:24px 20px;text-align:center;position:relative;
+}
+.evo-card .orb{
+  width:54px;height:54px;border-radius:50%;margin:0 auto 16px;
+  background:radial-gradient(circle at 35% 30%,#fff3,transparent 40%),var(--ec);
+  box-shadow:0 0 26px var(--ec);
+  animation:orb 3.2s ease-in-out infinite;
+}
+@keyframes orb{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.evo-card h4{font-family:'Unbounded',sans-serif;font-weight:700;font-size:.88rem;color:var(--ec)}
+.evo-card .mult{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:1.5rem;color:#fff;margin:8px 0 4px}
+.evo-card small{color:var(--muted);font-size:.78rem;display:block}
+
+/* ====== boutique ====== */
+.shop{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:14px;margin-top:26px}
+.shop-item{
+  background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;
+  transition:transform .2s,border-color .2s;
+}
+.shop-item:hover{transform:translateY(-3px);border-color:rgba(255,139,0,.4)}
+.shop-item h4{font-weight:700;font-size:.98rem;margin-bottom:4px}
+.shop-item .price{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--gold);margin-bottom:8px}
+.shop-item p{font-size:.84rem;color:var(--muted);margin-bottom:12px}
+.shop-item .badge{margin-left:0}
+
+/* ====== roadmap ====== */
+.wave{
+  display:flex;gap:18px;align-items:flex-start;
+  background:var(--panel);border:1px solid var(--line);border-radius:16px;
+  padding:20px 22px;margin-bottom:12px;
+}
+.wave .wn{
+  font-family:'Unbounded',sans-serif;font-weight:800;font-size:1.05rem;
+  color:var(--fire);min-width:50px;
+}
+.wave h4{font-size:1rem;margin-bottom:3px}
+.wave p{font-size:.88rem;color:var(--muted);margin:0;max-width:none}
+
+/* ====== reveal au scroll ====== */
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+
+footer{
+  text-align:center;padding:70px 24px 90px;color:var(--muted);
+  font-family:'JetBrains Mono',monospace;font-size:.74rem;letter-spacing:.06em;
+  border-top:1px solid var(--line);margin-top:30px;line-height:2;
+}
+
+@media (max-width:640px){
+  .stats{gap:8px}
+  .stat{padding:13px 16px;min-width:96px}
+  .stat b{font-size:1.4rem}
+  nav.toc{margin-top:-30px;padding:22px}
+  section{margin-bottom:78px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .reveal{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<!-- ====================== HERO ====================== -->
+<header class="hero">
+  <div class="sky" aria-hidden="true">
+    <span class="meteor" style="left:18%;--c:#ff8b00;--d:5.5s;--del:0s"></span>
+    <span class="meteor" style="left:42%;--c:#a855f7;--d:7s;--del:2.1s"></span>
+    <span class="meteor" style="left:64%;--c:#3d88ff;--d:6s;--del:3.4s"></span>
+    <span class="meteor" style="left:81%;--c:#ffb800;--d:8s;--del:1.2s"></span>
+    <span class="meteor" style="left:30%;--c:#ff44ff;--d:9s;--del:5s"></span>
+    <span class="meteor" style="left:92%;--c:#ff4f0a;--d:6.5s;--del:4.2s"></span>
+  </div>
+  <div class="impact-glow" aria-hidden="true"></div>
+
+  <div class="eyebrow">Game Design Document · v3 · Juin 2026</div>
+  <h1 class="title">STEAL<br>MY FACE</h1>
+  <p class="tagline">Trouve un masque rare. <strong>Garde-le</strong> pendant que tout le serveur essaie de te le voler.</p>
+
+  <div class="stats">
+    <div class="stat"><b data-count="33">0</b><span>masques</span></div>
+    <div class="stat"><b data-count="27">0</b><span>pouvoirs</span></div>
+    <div class="stat"><b data-count="7">0</b><span>raretés</span></div>
+    <div class="stat"><b data-count="16">0</b><span>joueurs max</span></div>
+  </div>
+
+  <div class="scroll-cue">▼ SCROLL</div>
+</header>
+
+<div class="wrap">
+
+<!-- ====================== SOMMAIRE ====================== -->
+<nav class="toc reveal">
+  <h2>Sommaire</h2>
+  <div class="toc-grid">
+    <a href="#vision" data-n="01">Vision &amp; Pitch</a>
+    <a href="#boucle" data-n="02">Boucle de gameplay</a>
+    <a href="#meteorites" data-n="03">Météorites</a>
+    <a href="#masques" data-n="04">Masques &amp; raretés</a>
+    <a href="#pouvoirs" data-n="05">Les 27 pouvoirs</a>
+    <a href="#fusion" data-n="06">Fusion</a>
+    <a href="#vol" data-n="07">Système de vol</a>
+    <a href="#mobilite" data-n="08">Inventaire &amp; mobilité</a>
+    <a href="#evolution" data-n="09">Évolution</a>
+    <a href="#economie" data-n="10">Économie</a>
+    <a href="#boutique" data-n="11">Boutique</a>
+    <a href="#retention" data-n="12">Rétention</a>
+    <a href="#monetisation" data-n="13">Monétisation</a>
+    <a href="#roadmap" data-n="14">Roadmap</a>
+  </div>
+</nav>
+
+<!-- ====================== 01 VISION ====================== -->
+<section id="vision" class="reveal">
+  <div class="ch-head">
+    <div class="ch-eyebrow">Chapitre 01 — Vision</div>
+    <h2>Une cible vivante qui rapporte gros</h2>
+  </div>
+  <p><strong>Steal My Face</strong> est un PvP nerveux pour 12 à 16 joueurs sur une ville nocturne de 600×600 studs baignée de néons. Des météorites font tomber des masques de rareté variable. Tu en équipes un : il génère du <strong>Face Cash</strong> en continu — et tout le serveur sait que tu le portes.</p>
+  <p>La tension naît de la possession. Plus ton masque est rare, plus il rapporte, plus il attire les convoitises. Le joueur vit un cycle permanent de prise de risque : garder un masque précieux le plus longtemps possible, esquiver, fuir, contre-attaquer.</p>
+  <div class="callout">
+    <div class="ct">Expérience recherchée</div>
+    « Ce mec porte un masque Divin depuis 3 minutes, il rapporte une fortune — il faut l'arrêter. » Chaque porteur ressent l'adrénaline d'être traqué. Chaque voleur ressent celle de la chasse.
+  </div>
+</section>
+
+<!-- ====================== 02 BOUCLE ====================== -->
+<section id="boucle" class="reveal">
+  <div class="ch-head" style="--c:var(--volt)">
+    <div class="ch-eyebrow" style="--c:var(--volt)">Chapitre 02 — Boucle de gameplay</div>
+    <h2>Le cycle qui ne s'arrête jamais</h2>
+  </div>
+  <div class="loop">
+    <div class="loop-step"><b>Une météorite tombe</b><br><span>Annonce, traînée de feu, cercle d'avertissement coloré selon la rareté.</span></div>
+    <div class="loop-step"><b>Un masque apparaît à l'impact</b><br><span>Rareté tirée selon le type de météorite. Cratère + explosion.</span></div>
+    <div class="loop-step"><b>Ramassage par proximité</b><br><span>Le masque se place sur le visage et part dans l'inventaire.</span></div>
+    <div class="loop-step"><b>Le masque génère du Face Cash</b><br><span>Chaque seconde, selon rareté × stade d'évolution.</span></div>
+    <div class="loop-step"><b>Les autres attaquent</b><br><span>Chaque coup remplit la jauge de vol du porteur.</span></div>
+    <div class="loop-step"><b>Le porteur survit</b><br><span>Fuite, dash, double saut, blink, pouvoir du masque.</span></div>
+    <div class="loop-step"><b>Le masque évolue</b><br><span>×1.5 → ×2.5 → ×5 sur le cash, aura DBZ visible par tous.</span></div>
+    <div class="loop-step"><b>Jauge pleine = masque au sol</b><br><span>Il redevient disponible pour tous. Le cycle recommence.</span></div>
+  </div>
+</section>
+
+<!-- ====================== 03 MÉTÉORITES ====================== -->
+<section id="meteorites" class="reveal">
+  <div class="ch-head" style="--c:var(--ember)">
+    <div class="ch-eyebrow" style="--c:var(--ember)">Chapitre 03 — Météorites <span class="badge b-ok">Opérationnel</span></div>
+    <h2>Trois pluies, trois enjeux</h2>
+  </div>
+  <div class="table-scroll">
+  <table>
+    <tr><th>Type</th><th>Fréquence</th><th>Avertissement</th><th>Table de rareté</th></tr>
+    <tr><td><strong>Normale</strong></td><td>45–60 s</td><td>5 s</td><td>Commun 40 · Rare 30 · Épique 16 · Légendaire 8 · Mythique 4 · Ultime 1.5 · Divin 0.5 (%)</td></tr>
+    <tr><td><strong>Spéciale</strong></td><td>8–10 min</td><td>15 s + annonce serveur</td><td>Mythique 60 · Ultime 28 · Divin 12 (%)</td></tr>
+    <tr><td><strong>Dorée</strong></td><td>15 min</td><td>30 s + annonce serveur</td><td>Épique 50 · Légendaire 30 · Mythique 15 · Ultime 4 · Divin 1 (%)</td></tr>
+  </table>
+  </div>
+  <p>Chaque chute : traînée de feu, explosion, cratère lumineux coloré selon la rareté. Quatre zones d'impact : <strong>Parc, Chantier, Zone Urbaine, Centre</strong>. Le <strong>Radar Météorite</strong> (boutique) affiche une flèche directionnelle vers l'impact avec la distance.</p>
+</section>
+
+<!-- ====================== 04 MASQUES ====================== -->
+<section id="masques" class="reveal">
+  <div class="ch-head" style="--c:var(--psy)">
+    <div class="ch-eyebrow" style="--c:var(--psy)">Chapitre 04 — Masques &amp; raretés</div>
+    <h2>33 visages, 7 niveaux de convoitise</h2>
+  </div>
+
+  <div class="tiers">
+    <div class="tier" style="--tc:var(--common)"><h4>COMMUN</h4><div class="row"><span>Masques</span><b>6</b></div><div class="row"><span>FC/s</span><b>2</b></div><div class="row"><span>Jauge</span><b>1 coup</b></div></div>
+    <div class="tier" style="--tc:var(--volt)"><h4>RARE</h4><div class="row"><span>Masques</span><b>6</b></div><div class="row"><span>FC/s</span><b>6</b></div><div class="row"><span>Jauge</span><b>2 coups</b></div></div>
+    <div class="tier" style="--tc:var(--psy)"><h4>ÉPIQUE</h4><div class="row"><span>Masques</span><b>5</b></div><div class="row"><span>FC/s</span><b>15</b></div><div class="row"><span>Jauge</span><b>3 coups</b></div></div>
+    <div class="tier" style="--tc:var(--gold)"><h4>LÉGENDAIRE</h4><div class="row"><span>Masques</span><b>5</b></div><div class="row"><span>FC/s</span><b>40</b></div><div class="row"><span>Jauge</span><b>4 coups</b></div></div>
+    <div class="tier" style="--tc:var(--fire)"><h4>MYTHIQUE</h4><div class="row"><span>Masques</span><b>4</b></div><div class="row"><span>FC/s</span><b>100</b></div><div class="row"><span>Jauge</span><b>5 coups</b></div></div>
+    <div class="tier" style="--tc:var(--mint)"><h4>ULTIME</h4><div class="row"><span>Masques</span><b>4</b></div><div class="row"><span>FC/s</span><b>250</b></div><div class="row"><span>Jauge</span><b>6 coups</b></div></div>
+    <div class="tier" style="--tc:var(--div)"><h4>DIVIN</h4><div class="row"><span>Masques</span><b>3</b></div><div class="row"><span>FC/s</span><b>1000</b></div><div class="row"><span>Jauge</span><b>8 coups</b></div></div>
+  </div>
+
+  <h3>Les 33 masques de base</h3>
+  <div class="mask-tier" style="--tc:var(--common)">
+    <div class="mask-tier-title">COMMUN — aucun pouvoir</div>
+    <div class="mask-grid">
+      <div class="chip"><span class="mn">Homeless</span></div><div class="chip"><span class="mn">Clochard</span></div>
+      <div class="chip"><span class="mn">PouleMouillée</span></div><div class="chip"><span class="mn">Geek</span></div>
+      <div class="chip"><span class="mn">Clown</span></div><div class="chip"><span class="mn">Maigrichon</span></div>
+    </div>
+  </div>
+  <div class="mask-tier" style="--tc:var(--volt)">
+    <div class="mask-tier-title">RARE</div>
+    <div class="mask-grid">
+      <div class="chip"><span class="mn">Rookie</span><span class="mp">Adrénaline</span></div>
+      <div class="chip"><span class="mn">Voleur</span><span class="mp">Pickpocket</span></div>
+      <div class="chip"><span class="mn">Pirate</span><span class="mp">Intimidation</span></div>
+      <div class="chip"><span class="mn">Robot</span><span class="mp">Scan</span></div>
+      <div class="chip"><span class="mn">Spectre</span><span class="mp">Semi-transparence</span></div>
+      <div class="chip"><span class="mn">Chasseur</span><span class="mp">Instinct</span></div>
+    </div>
+  </div>
+  <div class="mask-tier" style="--tc:var(--psy)">
+    <div class="mask-tier-title">ÉPIQUE</div>
+    <div class="mask-grid">
+      <div class="chip"><span class="mn">Ninja</span><span class="mp">Multiclonage</span></div>
+      <div class="chip"><span class="mn">Moine Shaolin</span><span class="mp">Méditation</span></div>
+      <div class="chip"><span class="mn">Berserker</span><span class="mp">Rage</span></div>
+      <div class="chip"><span class="mn">Nécromancien</span><span class="mp">Âmes Maudites</span></div>
+      <div class="chip"><span class="mn">Archimage</span><span class="mp">Barrière Arcanique</span></div>
+    </div>
+  </div>
+  <div class="mask-tier" style="--tc:var(--gold)">
+    <div class="mask-tier-title">LÉGENDAIRE</div>
+    <div class="mask-grid">
+      <div class="chip"><span class="mn">Souverain</span><span class="mp">Décret Royal</span></div>
+      <div class="chip"><span class="mn">Titan</span><span class="mp">Tremblement</span></div>
+      <div class="chip"><span class="mn">Dragon</span><span class="mp">Souffle</span></div>
+      <div class="chip"><span class="mn">Démon</span><span class="mp">Terreur</span></div>
+      <div class="chip"><span class="mn">Alien</span><span class="mp">Gravité Zéro</span></div>
+    </div>
+  </div>
+  <div class="mask-tier" style="--tc:var(--fire)">
+    <div class="mask-tier-title">MYTHIQUE</div>
+    <div class="mask-grid">
+      <div class="chip"><span class="mn">Dieu du Feu</span><span class="mp">Inferno</span></div>
+      <div class="chip"><span class="mn">Dieu des Ombres</span><span class="mp">Dimension Sombre</span></div>
+      <div class="chip"><span class="mn">Dieu du Vide</span><span class="mp">Aspiration</span></div>
+      <div class="chip"><span class="mn">Dieu des Tempêtes</span><span class="mp">Foudre</span></div>
+    </div>
+  </div>
+  <div class="mask-tier" style="--tc:var(--mint)">
+    <div class="mask-tier-title">ULTIME</div>
+    <div class="mask-grid">
+      <div class="chip"><span class="mn">Éternel</span><span class="mp">Immortalité</span></div>
+      <div class="chip"><span class="mn">Creator</span><span class="mp">Réécriture</span></div>
+      <div class="chip"><span class="mn">The Fallen</span><span class="mp">Résurrection</span></div>
+      <div class="chip"><span class="mn">Oblivion</span><span class="mp">Néant</span></div>
+    </div>
+  </div>
+  <div class="mask-tier" style="--tc:var(--div)">
+    <div class="mask-tier-title">DIVIN</div>
+    <div class="mask-grid">
+      <div class="chip"><span class="mn">Cosmic</span><span class="mp">Big Bang</span></div>
+      <div class="chip"><span class="mn">Roi Spirituel</span><span class="mp">Jugement Divin</span></div>
+      <div class="chip"><span class="mn">Chaos</span><span class="mp">Anarchie</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== 05 POUVOIRS ====================== -->
+<section id="pouvoirs" class="reveal">
+  <div class="ch-head" style="--c:var(--fire)">
+    <div class="ch-eyebrow" style="--c:var(--fire)">Chapitre 05 — Pouvoirs <span class="badge b-ok">26/27 validés</span></div>
+    <h2>Touche E. Une identité par masque.</h2>
+  </div>
+  <p>Chaque masque non-commun possède un pouvoir actif (<strong>E</strong> clavier · <strong>L1</strong> manette · bouton mobile), avec cooldown <strong>par exemplaire</strong> (4 masques Alien = 4 cooldowns indépendants). Les knockbacks sont appliqués côté client pour une physique fiable, et les effets défensifs sont branchés au système de vol.</p>
+  <div class="table-scroll">
+  <table>
+    <tr><th>Masque</th><th>Pouvoir</th><th>CD</th><th>Effet</th><th>État</th></tr>
+    <tr><td style="color:var(--volt)">Rookie</td><td>Adrénaline</td><td>25s</td><td>+30 vitesse pendant 5 s, traînée bleue</td><td><span class="badge b-bug">Bug post-pouvoir</span></td></tr>
+    <tr><td style="color:var(--volt)">Voleur</td><td>Pickpocket</td><td>30s</td><td>Vole 100 FC aux joueurs proches</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--volt)">Pirate</td><td>Intimidation</td><td>30s</td><td>Repousse violemment (force 120, portée 22)</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--volt)">Robot</td><td>Scan</td><td>35s</td><td>Révèle les porteurs de masque (portée 120)</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--volt)">Spectre</td><td>Semi-transparence</td><td>30s</td><td>Corps presque invisible quelques secondes</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--volt)">Chasseur</td><td>Instinct</td><td>30s</td><td>Highlight + colonne lumineuse sur le masque au sol le plus proche</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--psy)">Ninja</td><td>Multiclonage</td><td>30s</td><td>2 clones complets : aura, masque, animation de marche</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--psy)">Moine Shaolin</td><td>Méditation</td><td>35s</td><td>Réduit la jauge de vol, halo vert</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--psy)">Berserker</td><td>Rage</td><td>40s</td><td>Repousse en continu (portée 20, force 55)</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--psy)">Nécromancien</td><td>Âmes Maudites</td><td>35s</td><td>Écran violet-noir opaque pour les proches (4 s)</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--psy)">Archimage</td><td>Barrière Arcanique</td><td>40s</td><td>Bulle bleue qui absorbe le prochain coup puis se brise</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--gold)">Souverain</td><td>Décret Royal</td><td>40s</td><td>Ralentit les proches, marque dorée</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--gold)">Titan</td><td>Tremblement</td><td>35s</td><td>Projette en l'air + onde de choc</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--gold)">Dragon</td><td>Souffle</td><td>35s</td><td>Cône devant soi (portée 28, force 90)</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--gold)">Démon</td><td>Terreur</td><td>40s</td><td>Écran noir-rouge opaque pour les proches</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--gold)">Alien</td><td>Gravité Zéro</td><td>45s</td><td>Flotte, intouchable, jauge figée</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--fire)">Dieu du Feu</td><td>Inferno</td><td>45s</td><td>Traînée de feu continue, brûle les poursuivants (attaque bloquée 2 s)</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--fire)">Dieu des Ombres</td><td>Dimension Sombre</td><td>55s</td><td>Invisibilité totale 4 s (corps, cheveux, aura, nom) + intouchable</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--fire)">Dieu du Vide</td><td>Aspiration</td><td>50s</td><td>Aspire (portée 56) puis éjecte (force 150)</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--fire)">Dieu des Tempêtes</td><td>Foudre</td><td>45s</td><td>3 éclairs + projection</td><td><span class="badge b-wip">Visuel à embellir</span></td></tr>
+    <tr><td style="color:var(--mint)">Éternel</td><td>Immortalité</td><td>70s</td><td>Sphère dorée, jauge figée 4 s</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--mint)">Creator</td><td>Réécriture</td><td>75s</td><td>Téléporte 2 joueurs au loin</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--mint)">The Fallen</td><td>Résurrection</td><td>120s</td><td>Divise la jauge de vol par 2</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--mint)">Oblivion</td><td>Néant</td><td>65s</td><td>Invisibilité totale 10 s</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--div)">Cosmic</td><td>Big Bang</td><td>90s</td><td>Explosion massive (force 180) + annonce serveur</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--div)">Roi Spirituel</td><td>Jugement Divin</td><td>100s</td><td>Gèle une cible 3 s dans une cage dorée</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td style="color:var(--div)">Chaos</td><td>Anarchie</td><td>95s</td><td>Désactive les pouvoirs des proches 6 s, tourbillon violet</td><td><span class="badge b-ok">OK</span></td></tr>
+  </table>
+  </div>
+</section>
+
+<!-- ====================== 06 FUSION ====================== -->
+<section id="fusion" class="reveal">
+  <div class="ch-head" style="--c:var(--psy)">
+    <div class="ch-eyebrow" style="--c:var(--psy)">Chapitre 06 — Fusion <span class="badge b-wip">Stand actif · pouvoirs en vague 4</span></div>
+    <h2>Deux masques identiques. Un seul, plus fort.</h2>
+  </div>
+  <p>Approche-toi du <strong>stand violet</strong> près de la boutique avec deux masques identiques : la fusion est <strong>automatique et instantanée</strong> (burst violet). Le masque fusionné génère <strong>×2 de Face Cash</strong> et héritera d'un <strong>pouvoir amélioré : cooldown −30 %, effet +50 %</strong> (vague 4).</p>
+  <h3>Les 33 variantes fusionnées</h3>
+  <div class="mask-grid">
+    <div class="chip"><span class="mn">Homeless</span><span class="mp">→ Beau Gosse</span></div>
+    <div class="chip"><span class="mn">Clochard</span><span class="mp">→ Gentleman</span></div>
+    <div class="chip"><span class="mn">PouleMouillée</span><span class="mp">→ Coq</span></div>
+    <div class="chip"><span class="mn">Geek</span><span class="mp">→ Hacker</span></div>
+    <div class="chip"><span class="mn">Clown</span><span class="mp">→ Joker</span></div>
+    <div class="chip"><span class="mn">Maigrichon</span><span class="mp">→ Colosse</span></div>
+    <div class="chip"><span class="mn">Rookie</span><span class="mp">→ Vétéran</span></div>
+    <div class="chip"><span class="mn">Voleur</span><span class="mp">→ Maître Voleur</span></div>
+    <div class="chip"><span class="mn">Pirate</span><span class="mp">→ Capitaine</span></div>
+    <div class="chip"><span class="mn">Robot</span><span class="mp">→ Cyborg</span></div>
+    <div class="chip"><span class="mn">Spectre</span><span class="mp">→ Banshee</span></div>
+    <div class="chip"><span class="mn">Chasseur</span><span class="mp">→ Prédateur</span></div>
+    <div class="chip"><span class="mn">Ninja</span><span class="mp">→ Shadow Ninja</span></div>
+    <div class="chip"><span class="mn">Moine Shaolin</span><span class="mp">→ Grand Maître</span></div>
+    <div class="chip"><span class="mn">Berserker</span><span class="mp">→ Blood Berserker</span></div>
+    <div class="chip"><span class="mn">Nécromancien</span><span class="mp">→ Archon</span></div>
+    <div class="chip"><span class="mn">Archimage</span><span class="mp">→ Arcaniste</span></div>
+    <div class="chip"><span class="mn">Souverain</span><span class="mp">→ Dieu Empereur</span></div>
+    <div class="chip"><span class="mn">Titan</span><span class="mp">→ Titan Primordial</span></div>
+    <div class="chip"><span class="mn">Dragon</span><span class="mp">→ Dragon Ancien</span></div>
+    <div class="chip"><span class="mn">Démon</span><span class="mp">→ Démon Lord</span></div>
+    <div class="chip"><span class="mn">Alien</span><span class="mp">→ Alien Overlord</span></div>
+    <div class="chip"><span class="mn">Dieu du Feu</span><span class="mp">→ Inferno God</span></div>
+    <div class="chip"><span class="mn">Dieu des Ombres</span><span class="mp">→ Void Shadow</span></div>
+    <div class="chip"><span class="mn">Dieu du Vide</span><span class="mp">→ Abyss God</span></div>
+    <div class="chip"><span class="mn">Dieu des Tempêtes</span><span class="mp">→ Storm Eternal</span></div>
+    <div class="chip"><span class="mn">Éternel</span><span class="mp">→ Beyond Eternal</span></div>
+    <div class="chip"><span class="mn">Creator</span><span class="mp">→ True Creator</span></div>
+    <div class="chip"><span class="mn">The Fallen</span><span class="mp">→ Reborn</span></div>
+    <div class="chip"><span class="mn">Oblivion</span><span class="mp">→ True Oblivion</span></div>
+    <div class="chip"><span class="mn">Cosmic</span><span class="mp">→ True Cosmic</span></div>
+    <div class="chip"><span class="mn">Roi Spirituel</span><span class="mp">→ Dieu Suprême</span></div>
+    <div class="chip"><span class="mn">Chaos</span><span class="mp">→ Pure Chaos</span></div>
+  </div>
+</section>
+
+<!-- ====================== 07 VOL ====================== -->
+<section id="vol" class="reveal">
+  <div class="ch-head" style="--c:var(--bug)">
+    <div class="ch-eyebrow" style="--c:var(--bug)">Chapitre 07 — Système de vol <span class="badge b-ok">Opérationnel</span></div>
+    <h2>Le cœur du jeu</h2>
+  </div>
+
+  <div class="gauge-demo">
+    <div class="gauge-title" id="gaugeTitle">JAUGE DE VOL</div>
+    <div class="gauge" id="gauge" aria-hidden="true"></div>
+    <div class="gauge-sub"><span>MASQUE DIVIN — 8 COUPS</span><span id="gaugeCount">0 / 8</span></div>
+  </div>
+
+  <p><strong>Attaque</strong> : clic gauche (PC) · R1 (PS5) · bouton (mobile). Portée 7 studs côté serveur. Cooldown <strong>0,8 s</strong> par attaquant — rythme nerveux.</p>
+  <p><strong>Jauge pleine</strong> → le masque tombe au sol (le porteur ne meurt pas) et quitte l'inventaire. <strong>5 s d'immunité</strong> pour l'ancien porteur, masque au sol 30 s. Sans coup reçu pendant 5 s, la jauge redescend. Dès <strong>3 coups</strong>, l'attaquant est verrouillé sur sa cible 15 s. Screen shake proportionnel à la rareté. La jauge s'affiche des deux côtés : l'attaquant voit sa progression, la victime voit le danger.</p>
+  <div class="callout">
+    <div class="ct">Règle d'or de l'économie</div>
+    Voler un masque ne transfère <strong>aucun Face Cash</strong>. Le FC est une banque personnelle définitive — on te vole ton gagne-pain, jamais tes économies.
+  </div>
+  <p><strong>Défenses branchées</strong> : brûlure du Dieu du Feu (attaque bloquée 2 s), intouchabilité (Alien, Éternel, Ombres), Barrière Arcanique (absorbe 1 coup), Méditation (réduit la jauge), Résurrection (jauge ÷ 2), Jugement (jauge bloquée).</p>
+</section>
+
+<!-- ====================== 08 INVENTAIRE & MOBILITÉ ====================== -->
+<section id="mobilite" class="reveal">
+  <div class="ch-head" style="--c:var(--volt)">
+    <div class="ch-eyebrow" style="--c:var(--volt)">Chapitre 08 — Inventaire &amp; mobilité</div>
+    <h2>4 masques sur toi. Des jambes pour les garder.</h2>
+  </div>
+  <p><strong>Inventaire 4 slots</strong> <span class="badge b-ok">OK</span> : 1 masque ACTIF (sur le visage, génère le cash, volable) + 3 en poche. Changement par touches <strong>1-2-3-4</strong>, clic sur la case, ou D-pad manette. Le switch se verrouille dès 3 coups reçus (15 s) — impossible de planquer son masque sous pression.</p>
+  <div class="table-scroll">
+  <table>
+    <tr><th>Capacité</th><th>PC</th><th>PS5</th><th>Mobile</th><th>Accès</th><th>État</th></tr>
+    <tr><td><strong>Pouvoir du masque</strong></td><td>E</td><td>L1</td><td>Bouton</td><td>Masque équipé</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td><strong>Dash</strong></td><td>A</td><td>Triangle</td><td>Bouton</td><td>Achat boutique</td><td><span class="badge b-bug">Bouton mobile disparu</span></td></tr>
+    <tr><td><strong>Double saut</strong></td><td>A (en l'air)</td><td>—</td><td>Saut ×2</td><td>Achat boutique</td><td><span class="badge b-ok">OK</span></td></tr>
+    <tr><td><strong>Blink</strong> (téléportation 18 studs)</td><td>F</td><td>Rond</td><td>Bouton</td><td>Achat boutique</td><td><span class="badge b-wip">Vague 1 · en test</span></td></tr>
+    <tr><td><strong>Lâcher le masque</strong></td><td>G</td><td>—</td><td>Bouton</td><td>Toujours</td><td><span class="badge b-ok">OK</span></td></tr>
+  </table>
+  </div>
+</section>
+
+<!-- ====================== 09 ÉVOLUTION ====================== -->
+<section id="evolution" class="reveal">
+  <div class="ch-head" style="--c:var(--gold)">
+    <div class="ch-eyebrow" style="--c:var(--gold)">Chapitre 09 — Évolution <span class="badge b-ok">Opérationnel</span></div>
+    <h2>Plus tu tiens, plus tu brilles</h2>
+  </div>
+  <p>Garde le même masque équipé et il évolue — multiplicateur de cash et <strong>aura DBZ gérée côté serveur, visible par tout le monde</strong>. Le timer repart à zéro à chaque nouveau masque. Plus tu brilles, plus tu deviens une cible.</p>
+  <div class="evo">
+    <div class="evo-card" style="--ec:#5a5a70"><div class="orb"></div><h4>NORMAL</h4><div class="mult">×1</div><small>dès l'équipement</small></div>
+    <div class="evo-card" style="--ec:var(--volt)"><div class="orb"></div><h4>ÉVOLUÉ</h4><div class="mult">×1.5</div><small>10 min · aura bleue</small></div>
+    <div class="evo-card" style="--ec:var(--psy)"><div class="orb"></div><h4>CORROMPU</h4><div class="mult">×2.5</div><small>25 min · aura violette</small></div>
+    <div class="evo-card" style="--ec:var(--gold)"><div class="orb"></div><h4>ASCENDANT</h4><div class="mult">×5</div><small>45 min · aura dorée massive</small></div>
+  </div>
+  <div class="callout">
+    <div class="ct">Note de production</div>
+    Temps actuellement en mode test rapide (10/20/30 s). Horloge serveur synchronisée — fiable sur PC, mobile et PS5. Les auras viennent d'assets Toolbox (AuraEvolue, AuraCorrompu, AuraAscendant) et sont correctement masquées pendant les pouvoirs d'invisibilité.
+  </div>
+</section>
+
+<!-- ====================== 10 ÉCONOMIE ====================== -->
+<section id="economie" class="reveal">
+  <div class="ch-head" style="--c:var(--mint)">
+    <div class="ch-eyebrow" style="--c:var(--mint)">Chapitre 10 — Économie <span class="badge b-ok">Opérationnel</span></div>
+    <h2>Face Cash par seconde</h2>
+  </div>
+  <div class="table-scroll">
+  <table>
+    <tr><th>Rareté</th><th>Normal</th><th>Évolué ×1.5</th><th>Corrompu ×2.5</th><th>Ascendant ×5</th></tr>
+    <tr><td style="color:var(--common)"><strong>Commun</strong></td><td>2</td><td>3</td><td>5</td><td>10</td></tr>
+    <tr><td style="color:var(--volt)"><strong>Rare</strong></td><td>6</td><td>9</td><td>15</td><td>30</td></tr>
+    <tr><td style="color:var(--psy)"><strong>Épique</strong></td><td>15</td><td>22</td><td>37</td><td>75</td></tr>
+    <tr><td style="color:var(--gold)"><strong>Légendaire</strong></td><td>40</td><td>60</td><td>100</td><td>200</td></tr>
+    <tr><td style="color:var(--fire)"><strong>Mythique</strong></td><td>100</td><td>150</td><td>250</td><td>500</td></tr>
+    <tr><td style="color:var(--mint)"><strong>Ultime</strong></td><td>250</td><td>375</td><td>625</td><td>1250</td></tr>
+    <tr><td style="color:var(--div)"><strong>Divin</strong></td><td>1000</td><td>1500</td><td>2500</td><td>5000</td></tr>
+  </table>
+  </div>
+  <p>Multiplicateurs cumulables : masque <strong>fusionné ×2</strong>, bonus <strong>défis ×2</strong> (5 min). Persistance DataStore prête, à activer avant le lancement public.</p>
+</section>
+
+<!-- ====================== 11 BOUTIQUE ====================== -->
+<section id="boutique" class="reveal">
+  <div class="ch-head" style="--c:var(--ok)">
+    <div class="ch-eyebrow" style="--c:var(--ok)">Chapitre 11 — Boutique</div>
+    <h2>Des achats permanents, payés en sueur</h2>
+  </div>
+  <p>Stand au socle <strong>vert néon</strong> au centre de la map — le bouton n'apparaît qu'à moins de 6 studs. Tout se paie en Face Cash gagné en jouant.</p>
+  <div class="shop">
+    <div class="shop-item"><h4>Boost Vitesse</h4><div class="price">500 / 2 000 / 8 000 FC</div><p>+ vitesse permanente, 3 niveaux.</p><span class="badge b-ok">Actif</span></div>
+    <div class="shop-item"><h4>Dash</h4><div class="price">1 500 / 6 000 / 20 000 FC</div><p>Impulsion avant + traînée bleue. CD 3 s.</p><span class="badge b-bug">Bouton mobile à réparer</span></div>
+    <div class="shop-item"><h4>Double Saut</h4><div class="price">3 000 FC</div><p>2ᵉ saut en l'air avec salto + anneau.</p><span class="badge b-ok">Actif</span></div>
+    <div class="shop-item"><h4>Blink</h4><div class="price">50 000 FC</div><p>Téléportation instantanée 18 studs devant (touche F).</p><span class="badge b-wip">Vague 1 · en test</span></div>
+    <div class="shop-item"><h4>Réduction de Vol</h4><div class="price">2 500 / 10 000 / 35 000 FC</div><p>Ta jauge de vol monte moins vite.</p><span class="badge b-wip">À vérifier · vague 2</span></div>
+    <div class="shop-item"><h4>Bouclier</h4><div class="price">5 000 / 18 000 FC</div><p>Absorbe des coups, avec rendu visuel.</p><span class="badge b-todo">Vague 2</span></div>
+    <div class="shop-item"><h4>Aura Répulsion</h4><div class="price">75 000 FC</div><p>Repousse légèrement les joueurs trop proches, en permanence.</p><span class="badge b-todo">Vague 2</span></div>
+    <div class="shop-item"><h4>Radar Météorite</h4><div class="price">8 000 FC</div><p>Flèche directionnelle vers l'impact + distance.</p><span class="badge b-wip">Vague 1 · en test</span></div>
+    <div class="shop-item"><h4>Boost Évolution ×1.5</h4><div class="price">25 000 FC</div><p>Tes masques évoluent 1,5× plus vite.</p><span class="badge b-todo">Vague 2</span></div>
+    <div class="shop-item"><h4>Boost Évolution ×2</h4><div class="price">150 000 FC</div><p>Tes masques évoluent 2× plus vite.</p><span class="badge b-todo">Vague 2</span></div>
+  </div>
+</section>
+
+<!-- ====================== 12 RÉTENTION ====================== -->
+<section id="retention" class="reveal">
+  <div class="ch-head" style="--c:var(--psy)">
+    <div class="ch-eyebrow" style="--c:var(--psy)">Chapitre 12 — Rétention <span class="badge b-ok">Défis opérationnels</span></div>
+    <h2>Une raison de revenir chaque jour</h2>
+  </div>
+  <div class="table-scroll">
+  <table>
+    <tr><th>Défi quotidien</th><th>Objectif</th><th>Récompense</th></tr>
+    <tr><td>Récupérer des masques de météorites</td><td>5</td><td>2 000 FC</td></tr>
+    <tr><td>Voler des masques</td><td>3</td><td>1 000 FC</td></tr>
+    <tr><td>Garder un masque d'affilée</td><td>5 min</td><td>500 FC</td></tr>
+  </table>
+  </div>
+  <p><strong>Bonus 3/3</strong> : les trois défis complétés déclenchent un <strong>×2 sur tous les gains de Face Cash pendant 5 minutes</strong>. À venir : streak de jours consécutifs, battle pass, stats personnelles (nécessitent la persistance).</p>
+</section>
+
+<!-- ====================== 13 MONÉTISATION ====================== -->
+<section id="monetisation" class="reveal">
+  <div class="ch-head" style="--c:var(--gold)">
+    <div class="ch-eyebrow" style="--c:var(--gold)">Chapitre 13 — Monétisation <span class="badge b-todo">À intégrer</span></div>
+    <h2>Vendre du style et du temps, jamais de la puissance</h2>
+  </div>
+  <p>Discipline absolue : <strong>aucune vente de Face Cash en Robux</strong> (la boutique donne vitesse et défense — en vendre serait du pay-to-win, et le pay-to-win tue les jeux PvP). Tout ce qui touche au gameplay se gagne en jouant.</p>
+  <div class="shop">
+    <div class="shop-item"><h4>Game Pass VIP</h4><div class="price">~99 R$</div><p>Aura cosmétique exclusive + tag dans le chat.</p></div>
+    <div class="shop-item"><h4>Pass ×2 Face Cash</h4><div class="price">~199 R$</div><p>Gain de temps — la limite acceptable du genre.</p></div>
+    <div class="shop-item"><h4>Skins de masques</h4><div class="price">Robux</div><p>Recolorations néon des 33 masques.</p></div>
+    <div class="shop-item"><h4>Effets de vol &amp; trails</h4><div class="price">Robux</div><p>Effet stylé quand TU voles un masque, traînées de dash.</p></div>
+    <div class="shop-item"><h4>Battle Pass premium</h4><div class="price">Saison</div><p>Piste de récompenses cosmétiques.</p></div>
+    <div class="shop-item"><h4>Starter Pack</h4><div class="price">~49 R$</div><p>Pack cosmétique de bienvenue, achat unique.</p></div>
+  </div>
+  <div class="callout">
+    <div class="ct">Le vrai levier</div>
+    L'argent vient de la rétention : persistance d'abord, puis updates hebdomadaires, clips TikTok de vols de masques Divins, et icône/miniature testées en A/B.
+  </div>
+</section>
+
+<!-- ====================== 14 ROADMAP ====================== -->
+<section id="roadmap" class="reveal">
+  <div class="ch-head" style="--c:var(--fire)">
+    <div class="ch-eyebrow" style="--c:var(--fire)">Chapitre 14 — Roadmap</div>
+    <h2>Le plan de bataille</h2>
+  </div>
+  <p><strong>Déjà construit et validé</strong> : météorites (3 types), vol complet, inventaire 4 slots, banque FC, évolution + auras serveur, 26 pouvoirs validés avec cooldown par exemplaire, fusion automatique, défis quotidiens, boutique (3 effets actifs), dash, double saut, ambiance néon nuit.</p>
+  <div class="wave"><div class="wn">V1</div><div><h4>Blink · Radar Météorite · Ambiance map <span class="badge b-wip">En test</span></h4><p>Téléportation (F), flèche directionnelle vers les météorites, éclairage néon nuit complet.</p></div></div>
+  <div class="wave"><div class="wn">V2</div><div><h4>Boutique 100 % branchée + bug Rookie + Dash mobile <span class="badge b-wip">En préparation</span></h4><p>Bouclier avec visuel, réduction de vol effective, aura répulsion, boosts d'évolution, purge du ralentissement post-Adrénaline.</p></div></div>
+  <div class="wave"><div class="wn">V3</div><div><h4>Refonte complète de l'ATH <span class="badge b-todo">À venir</span></h4><p>Interface unifiée et repositionnée pour PC, mobile et PS5 — niveau jeux à succès.</p></div></div>
+  <div class="wave"><div class="wn">V4</div><div><h4>Pouvoirs des masques fusionnés <span class="badge b-todo">À venir</span></h4><p>33 variantes : pouvoir de base avec cooldown −30 % et effet +50 %. Branchement du ×2 cash fusionné.</p></div></div>
+  <div class="wave"><div class="wn">V5</div><div><h4>Persistance · docs finales · monétisation <span class="badge b-todo">À venir</span></h4><p>DataStore (FC, masques, achats), Bible v3, retrait des outils de test, produits Robux.</p></div></div>
+</section>
+
+</div>
+
+<footer>
+  STEAL MY FACE — GDD v3 · Document de référence · Roblox · Juin 2026<br>
+  Tous les éléments marqués « Opérationnel » ont été validés en test réel (PC · mobile · PS5).
+</footer>
+
+<script>
+// ===== barre de progression =====
+const bar=document.getElementById('progress');
+addEventListener('scroll',()=>{
+  const h=document.documentElement;
+  bar.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';
+},{passive:true});
+
+// ===== reveal au scroll =====
+const io=new IntersectionObserver(es=>{
+  es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}});
+},{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+// ===== compteurs animés =====
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cio=new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(!e.isIntersecting)return;
+    const el=e.target,end=+el.dataset.count;cio.unobserve(el);
+    if(reduce){el.textContent=end;return}
+    const t0=performance.now(),dur=1400;
+    (function tick(t){
+      const p=Math.min((t-t0)/dur,1),ease=1-Math.pow(1-p,3);
+      el.textContent=Math.round(end*ease);
+      if(p<1)requestAnimationFrame(tick);
+    })(t0);
+  });
+},{threshold:.5});
+document.querySelectorAll('[data-count]').forEach(el=>cio.observe(el));
+
+// ===== jauge de vol vivante =====
+const SEGS=8,gauge=document.getElementById('gauge'),
+      gTitle=document.getElementById('gaugeTitle'),
+      gCount=document.getElementById('gaugeCount');
+for(let i=0;i<SEGS;i++){const s=document.createElement('div');s.className='seg';gauge.appendChild(s)}
+const segs=[...gauge.children];
+let hits=0;
+function setTitle(){
+  if(hits>=SEGS){gTitle.textContent='💥 MASQUE PERDU';gTitle.style.color='var(--bug)'}
+  else if(hits>=6){gTitle.textContent='⚠ VOL IMMINENT';gTitle.style.color='var(--bug)'}
+  else if(hits>=4){gTitle.textContent='MASQUE ATTAQUÉ';gTitle.style.color='var(--gold)'}
+  else{gTitle.textContent='JAUGE DE VOL';gTitle.style.color='var(--ink)'}
+  gCount.textContent=hits+' / '+SEGS;
+}
+function colorFor(i){
+  const f=i/(SEGS-1);
+  return f<0.45?'var(--ember)':f<0.75?'var(--gold)':'var(--bug)';
+}
+if(!reduce){
+  setInterval(()=>{
+    if(hits<SEGS){
+      segs[hits].style.setProperty('--segc',colorFor(hits));
+      segs[hits].classList.add('full');
+      hits++;setTitle();
+    }else{
+      setTimeout(()=>{segs.forEach(s=>s.classList.remove('full'));hits=0;setTitle()},150);
+    }
+  },720);
+}else{
+  segs.slice(0,5).forEach((s,i)=>{s.style.setProperty('--segc',colorFor(i));s.classList.add('full')});
+  hits=5;setTitle();
+}
+setTitle();
+</script>
+</body>
+</html>
